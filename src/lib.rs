@@ -18,6 +18,7 @@ pub mod rrd;
 #[cfg(test)]
 mod tests {
     extern crate tempdir;
+    extern crate time;
     use super::*;
 
     #[test]
@@ -28,14 +29,20 @@ mod tests {
         db_name.push("test.rrd");
 
         let db = rrd::Database::create(db_name.to_str().unwrap().into(),
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    vec!["DS:speed:COUNTER:600:U:U", "RRA:AVERAGE:0.5:1:24", "RRA:AVERAGE:0.5:6:10"])
+                                       None,
+                                       Some(1000000),
+                                       None,
+                                       None,
+                                       None,
+                                       vec!["DS:speed:COUNTER:600:U:U",
+                                            "RRA:AVERAGE:0.5:1:24",
+                                            "RRA:AVERAGE:0.5:6:10"])
                 .unwrap();
 
+        for t in 1..1000 {
+            db.update_single_f64(1000000 + (t * 1000), t as f64 * 1000.0)
+                .unwrap();
+        }
 
         // exit so we can see what's going on the database
         //std::process::exit(0);

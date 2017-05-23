@@ -4,7 +4,9 @@ use error::*;
 use std;
 use std::os::raw::c_char;
 
-pub struct Database {}
+pub struct Database {
+    filename: CString,
+}
 
 impl Database {
     pub fn create(filename: String,
@@ -49,7 +51,36 @@ impl Database {
         if result != 0 {
             Err(Error::RrdError(unsafe { CString::from_raw(rrd_get_error()) }))
         } else {
-            Ok(Database {})
+            Ok(Database { filename: filename })
+        }
+    }
+
+    pub fn update_single_f64(&self,
+                             timestamp: time_t,
+                             value: f64)
+                             -> Result<(), Error> {
+        let argv = vec![format!("{}:{}", timestamp, value)];
+
+        let argv = argv.into_iter() // Need to keep argv in scope so that the strings are not dropped
+            .map(|arg| CString::new(arg).unwrap())
+            .collect::<Vec<CString>>();
+        let mut args = argv.iter()
+            .map(|arg| arg.as_ptr())
+            .collect::<Vec<*const c_char>>();
+        args.push(std::ptr::null());
+
+        let result = unsafe {
+            rrd_updatex_r(self.filename.as_ptr(),
+                            std::ptr::null_mut(),
+                            0,
+                            argv.len() as i32,
+                            args.as_mut_ptr())
+        };
+
+        if result != 0 {
+            Err(Error::RrdError(unsafe { CString::from_raw(rrd_get_error()) }))
+        } else {
+            Ok(())
         }
     }
 }

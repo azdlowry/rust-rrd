@@ -7,6 +7,7 @@ build = "build.rs"
 [dependencies]
 tempdir = "*"
 quick-error = "*"
+time = "*"
 
 [build-dependencies]
 bindgen = "*"
