@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceRoot}/target/debug/rrd-6b39dac34a7d3844",
+            "args": ["--test"],
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}
