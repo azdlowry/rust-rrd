@@ -34,15 +34,23 @@ mod tests {
                                        None,
                                        None,
                                        None,
-                                       vec!["DS:speed:COUNTER:600:U:U",
-                                            "RRA:AVERAGE:0.5:1:24",
-                                            "RRA:AVERAGE:0.5:6:10"])
+                                       vec!["DS:speed:GAUGE:6000:U:U",
+                                            "RRA:AVERAGE:0.5:1:240",
+                                            "RRA:AVERAGE:0.5:6:100"])
                 .unwrap();
 
-        for t in 1..1000 {
-            db.update_single_f64(1000000 + (t * 1000), t as f64 * 1000.0)
+        for t in 1..100 {
+            db.update_single_f64(1000000 + (t * 1000), 1000.0)
                 .unwrap();
         }
+
+        let data = db.fetch(rrd::ConsolidationFunction::Average,
+                   1000000 + 1000,
+                   1000000 + (97 * 1000),
+                   1000)
+            .unwrap();
+
+        println!("Data: {:?}", data);
 
         // exit so we can see what's going on the database
         //std::process::exit(0);
