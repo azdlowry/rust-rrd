@@ -10,6 +10,10 @@ pub struct Database {
 }
 
 impl Database {
+    pub fn open(filename: String) -> Result<Database, Error> {
+        Ok(Database { filename: CString::new(&*filename)? })
+    }
+
     pub fn create(filename: String,
                   pdp_step: Option<u64>,
                   last_up: Option<time_t>,
