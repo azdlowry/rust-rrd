@@ -6,11 +6,7 @@
 
 #[macro_use]
 extern crate quick_error;
-
-#[allow(unused)]
-mod rrd_ffi {
-    include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-}
+extern crate librrd_sys;
 
 pub mod error;
 pub mod rrd;

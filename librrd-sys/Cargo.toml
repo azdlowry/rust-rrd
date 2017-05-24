@@ -1,0 +1,15 @@
+[package]
+name = "librrd-sys"
+version = "0.1.0"
+authors = ["Andy Lowry <andy@andylowry.me.uk>"]
+repository = "https://github.com/azdlowry/rust-rrd"
+description = "Rust bindings to the librrd library"
+links = "rust-rrd"
+build = "build.rs"
+keywords = ["sqlite", "database", "ffi"]
+categories = ["database", "external-ffi-bindings"]
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "*"

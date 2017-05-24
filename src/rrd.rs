@@ -1,4 +1,4 @@
-use rrd_ffi::*;
+use librrd_sys::*;
 use std::ffi::*;
 use error::*;
 use std;
