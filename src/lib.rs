@@ -25,21 +25,7 @@ mod tests {
 
     #[test]
     fn can_roundtrip_some_data() {
-        let tmp_dir = tempdir::TempDir::new("can_roundtrip_some_data").unwrap();
-
-        let mut db_name = tmp_dir.path().to_path_buf();
-        db_name.push("test.rrd");
-
-        let db = rrd::Database::create(db_name.to_str().unwrap().into(),
-                                       None,
-                                       Some(1000000),
-                                       None,
-                                       None,
-                                       None,
-                                       vec!["DS:speed:GAUGE:6000:U:U",
-                                            "RRA:AVERAGE:0.5:1:240",
-                                            "RRA:AVERAGE:0.5:6:100"])
-                .unwrap();
+        let (tmp_dir, db) = create_db("can_roundtrip_some_data");
 
         for t in 1..10 {
             db.update_single_f64(1000000 + (t * 1000), 4337.0)
@@ -62,23 +48,7 @@ mod tests {
 
     #[test]
     fn can_open_an_existing_database() {
-        let tmp_dir = tempdir::TempDir::new("can_open_an_existing_database").unwrap();
-
-        let mut db_name = tmp_dir.path().to_path_buf();
-        db_name.push("test.rrd");
-
-        {
-            rrd::Database::create(db_name.to_str().unwrap().into(),
-                                  None,
-                                  Some(1000000),
-                                  None,
-                                  None,
-                                  None,
-                                  vec!["DS:speed:GAUGE:6000:U:U",
-                                       "RRA:AVERAGE:0.5:1:240",
-                                       "RRA:AVERAGE:0.5:6:100"])
-                    .unwrap();
-        }
+        let (tmp_dir, _) = create_db("can_update_multiple_points_in_one_call");
 
         let db = rrd::Database::open(db_name.to_str().unwrap().into()).unwrap();
 
@@ -103,22 +73,7 @@ mod tests {
 
     #[test]
     fn can_update_multiple_points_in_one_call() {
-        let tmp_dir = tempdir::TempDir::new("can_update_multiple_points_in_one_call").unwrap();
-
-        let mut db_name = tmp_dir.path().to_path_buf();
-        db_name.push("test.rrd");
-
-        let db = rrd::Database::create(db_name.to_str().unwrap().into(),
-                                       None,
-                                       Some(1000000),
-                                       None,
-                                       None,
-                                       None,
-                                       vec!["DS:speed:GAUGE:6000:U:U",
-                                            "RRA:AVERAGE:0.5:1:240",
-                                            "RRA:AVERAGE:0.5:6:100"])
-                .unwrap();
-        rrd::Database::open(db_name.to_str().unwrap().into()).unwrap();
+        let (tmp_dir, db) = create_db("can_update_multiple_points_in_one_call");
 
         db.update_f64((1..10).map(|t| (1000000 + (t * 1000), 4337.0)).collect())
             .unwrap();
@@ -139,21 +94,7 @@ mod tests {
 
     #[bench]
     fn benchmark_single_updates(b: &mut Bencher) {
-        let tmp_dir = tempdir::TempDir::new("benchmark_single_updates").unwrap();
-
-        let mut db_name = tmp_dir.path().to_path_buf();
-        db_name.push("test.rrd");
-
-        let db = rrd::Database::create(db_name.to_str().unwrap().into(),
-                                       None,
-                                       Some(1000000),
-                                       None,
-                                       None,
-                                       None,
-                                       vec!["DS:speed:GAUGE:6000:U:U",
-                                            "RRA:AVERAGE:0.5:1:240",
-                                            "RRA:AVERAGE:0.5:6:100"])
-                .unwrap();
+        let (tmp_dir, db) = create_db("benchmark_single_updates");
 
         let mut last_val = 1000000;
         let count = 100;
@@ -169,21 +110,7 @@ mod tests {
 
     #[bench]
     fn benchmark_multi_updates(b: &mut Bencher) {
-        let tmp_dir = tempdir::TempDir::new("benchmark_multi_updates").unwrap();
-
-        let mut db_name = tmp_dir.path().to_path_buf();
-        db_name.push("test.rrd");
-
-        let db = rrd::Database::create(db_name.to_str().unwrap().into(),
-                                       None,
-                                       Some(1000000),
-                                       None,
-                                       None,
-                                       None,
-                                       vec!["DS:speed:GAUGE:6000:U:U",
-                                            "RRA:AVERAGE:0.5:1:240",
-                                            "RRA:AVERAGE:0.5:6:100"])
-                .unwrap();
+        let (tmp_dir, db) = create_db("benchmark_multi_updates");
 
         let mut last_val = 1000000;
         let count = 100;
@@ -198,6 +125,23 @@ mod tests {
 
     #[bench]
     fn benchmark_reads(b: &mut Bencher) {
+        let (tmp_dir, db) = create_db("benchmark_reads");
+
+        db.update_f64((1..10)
+                            .map(|t| (1000000 + (t * 1000), 4337.0))
+                            .collect())
+            .unwrap();
+
+        b.iter(|| {
+                   let data = db.fetch(rrd::ConsolidationFunction::Average,
+                                       1000000 + 1000,
+                                       1000000 + (7 * 1000),
+                                       1000)
+                       .unwrap();
+               });
+    }
+
+    fn create_db(name: &str) -> (tempdir::TempDir, rrd::Database) {
         let tmp_dir = tempdir::TempDir::new("benchmark_reads").unwrap();
 
         let mut db_name = tmp_dir.path().to_path_buf();
@@ -214,17 +158,6 @@ mod tests {
                                             "RRA:AVERAGE:0.5:6:100"])
                 .unwrap();
 
-        db.update_f64((1..10)
-                            .map(|t| (1000000 + (t * 1000), 4337.0))
-                            .collect())
-            .unwrap();
-
-        b.iter(|| {
-                   let data = db.fetch(rrd::ConsolidationFunction::Average,
-                                       1000000 + 1000,
-                                       1000000 + (7 * 1000),
-                                       1000)
-                       .unwrap();
-               });
+        (tmp_dir, db)
     }
 }
