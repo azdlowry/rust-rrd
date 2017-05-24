@@ -61,7 +61,14 @@ impl Database {
     }
 
     pub fn update_single_f64(&self, timestamp: time_t, value: f64) -> Result<(), Error> {
-        let argv = vec![format!("{}:{}", timestamp, value)];
+        self.update_f64(vec![(timestamp, value)])
+    }
+
+    pub fn update_f64(&self, points: Vec<(time_t, f64)>) -> Result<(), Error> {
+        let argv: Vec<String> = points
+            .iter()
+            .map(|&(timestamp, value)| format!("{}:{}", timestamp, value))
+            .collect();
 
         let argv = argv.into_iter() // Need to keep argv in scope so that the strings are not dropped
             .map(|arg| CString::new(arg).unwrap())
