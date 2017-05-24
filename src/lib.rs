@@ -22,7 +22,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn can_roundtrip_some_data() {
         let tmp_dir = tempdir::TempDir::new("it_works").unwrap();
 
         let mut db_name = tmp_dir.path().to_path_buf();
@@ -39,18 +39,20 @@ mod tests {
                                             "RRA:AVERAGE:0.5:6:100"])
                 .unwrap();
 
-        for t in 1..100 {
-            db.update_single_f64(1000000 + (t * 1000), 1000.0)
+        for t in 1..10 {
+            db.update_single_f64(1000000 + (t * 1000), 4337.0)
                 .unwrap();
         }
 
         let data = db.fetch(rrd::ConsolidationFunction::Average,
-                   1000000 + 1000,
-                   1000000 + (97 * 1000),
-                   1000)
+                            1000000 + 1000,
+                            1000000 + (7 * 1000),
+                            1000)
             .unwrap();
 
         println!("Data: {:?}", data);
+
+        assert_eq!(4337.0, data["speed"][1]);
 
         // exit so we can see what's going on the database
         //std::process::exit(0);
