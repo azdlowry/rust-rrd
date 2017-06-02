@@ -33,13 +33,13 @@ impl Database {
 
         let result = unsafe {
             rrd_create_r2(filename.as_ptr(),
-                          pdp_step.unwrap_or(0),
+                          pdp_step.unwrap_or(0) as ulong,
                           last_up.unwrap_or(0),
                           if no_overwrite.unwrap_or(false) { 1 } else { 0 },
                           if let Some(s) = sources {
                               s.into_iter()
                                   .map(move |c| CString::new(c).unwrap().as_ptr())
-                                  .collect::<Vec<*const i8>>()
+                                  .collect::<Vec<*const c_char>>()
                                   .as_mut_ptr()
                           } else {
                               std::ptr::null_mut()
@@ -99,12 +99,12 @@ impl Database {
                  end: time_t,
                  step: u64)
                  -> Result<HashMap<String, &[f64]>, Error> {
-        let mut num_of_data_sources: u64 = 0;
+        let mut num_of_data_sources: u_long = 0;
         let mut names_of_data_sources: *mut *mut ::std::os::raw::c_char = std::ptr::null_mut();
         let mut data: *mut rrd_value_t = std::ptr::null_mut();
         let mut start = start;
         let mut end = end;
-        let mut step = step;
+        let mut step = step as u_long;
 
         let result = unsafe {
             rrd_fetch_r(self.filename.as_ptr(),
@@ -131,7 +131,7 @@ impl Database {
                 unsafe { std::slice::from_raw_parts(data, num_of_data_sources as usize) };
             let data = data_slices
                 .iter()
-                .map(|data_slice| unsafe { std::slice::from_raw_parts(data_slice, ((end - start) as u64 / step + 1) as usize) });
+                .map(|data_slice| unsafe { std::slice::from_raw_parts(data_slice, ((end - start) as u_long / step + 1) as usize) });
             Ok(names.zip(data).collect())
         }
     }
